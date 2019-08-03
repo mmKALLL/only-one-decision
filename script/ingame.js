@@ -34,7 +34,7 @@
   const BG_SPIN_SPEED = 0.03;
 
   const keysHeld = {}
-  document.body.onkeydown = (event) => keysHeld[event.key] = true
+  document.body.onkeydown = (event) => { keysHeld[event.key] = true; enableMusic() }
   document.body.onkeyup = (event) => keysHeld[event.key] = false
 
   var gameStatus = {
@@ -61,18 +61,19 @@
     if (gameStatus.state == "ingame") {
       handleKeys();
 
-      if (gameStatus.distance >= 900) {
+      if (gameStatus.distance >= images[41].width - canvas.width) {
         gameStatus.direction = 'left'
+        keysHeld.ArrowRight = false
       }
     }
   }
 
   function handleKeys() {
-    if (keysHeld['ArrowRight'] === true && gameStatus.direction === 'right') {
+    if (keysHeld['ArrowRight'] === true) {
       gameStatus.distance += MOVE_SPEED
     }
 
-    if (keysHeld['ArrowLeft'] === true && gameStatus.direction === 'left') {
+    if (keysHeld['ArrowLeft'] === true) {
       gameStatus.distance -= MOVE_SPEED
     }
 
@@ -90,8 +91,6 @@
       drawIngame();
     } else if (gameStatus.state === "mainmenu") {
       drawMainMenu();
-    } else if (gameStatus.state === "paused") {
-      drawPauseScreen();
     } else if (gameStatus.state === "gameover") {
       drawGameOver();
     }
@@ -100,10 +99,6 @@
   function drawMainMenu() {
     drawBackground();
     drawTitle();
-  }
-
-  function drawPauseScreen() {
-    // TODO
   }
 
   function drawGameOver() {
@@ -135,33 +130,10 @@
     ctx.closePath();
 
     // drawRotated(images.space_big, 325, 325, gameStatus.gameFrame * BG_SPIN_SPEED, -675, -675);
-    ctx.drawImage(images[41], 0 - gameStatus.distance, 200);
-  }
-
-  function drawPlayer() {
-    // animated blob_s
-    // if (gameStatus.gameFrame % 60 < 30) {
-    //   ctx.drawImage(images.blob_s1, 650 / 2 - images.blob_s1.width / 2, 650 / 2 - 65 - images.blob_s1.height / 2);
-    // } else {
-    //   ctx.drawImage(images.blob_s2, 650 / 2 - images.blob_s2.width / 2, 650 / 2 - 65 - images.blob_s2.height / 2);
-    // }
-  }
-
-  function drawParticles() {
-    var i;
-    for (i = 0; i < activeShots.length; i += 1) {
-      //console.log(activeShots[i].targetY, activeShots[i].targetX);
-      ctx.save();
-      if (activeShots[i].animationStyle === "fade") {
-        ctx.globalAlpha = 1 - (activeShots[i].activeSince * 1.0 / activeShots[i].visibleUntil);
-      }
-      var angle = Math.atan2(activeShots[i].originY - activeShots[i].targetY, activeShots[i].targetX - activeShots[i].originX);
-      drawRotated(activeShots[i].image,
-          activeShots[i].originX - (13 * Math.sin(angle)),
-          activeShots[i].originY - (13 * Math.cos(angle)),
-          360*angle/(2*Math.PI),
-          0, 0);
-      ctx.restore();
+    if (gameStatus.direction === 'right') {
+      ctx.drawImage(images[41], 0 - gameStatus.distance, 200);
+    } else {
+      ctx.drawImage(images[42], 0 - gameStatus.distance, 200);
     }
   }
 
@@ -181,9 +153,6 @@
 
     // background
     drawBackground();
-
-    // objects (characters, enemies, etc)
-    // drawPlayer();
 
     // foreground (particle effects, etc)
     // drawParticles();
@@ -209,7 +178,7 @@
   }
 
   // Returns true if adding to sounds object was a success, false otherwise.
-  function loadSound(filename, loop) {
+  function loadSound(filename) {
     if (!sounds[filename.slice(0, -4)]) {
       var snd = new Audio(SOUND_PATH + filename);
       snd.ready = false;
@@ -226,6 +195,15 @@
     gameStatus.sfxVolume = newVolume;
     for (key in sounds) {
       sounds[key].volume = newVolume;
+    }
+  }
+
+  function enableMusic() {
+    if (!sounds.TRACK1.playing) {
+      sounds.TRACK1.playing = true
+      setTimeout(() => {
+        sounds.TRACK1.play()
+      }, 1200)
     }
   }
 
@@ -246,7 +224,6 @@
       this.currentTime = 0;
       this.play();
     });
-    sounds.TRACK1.play();
 
     function checkAssets() {
       if (gameStatus.ready) {
@@ -262,6 +239,7 @@
           }
         }
 
+        // Assets loaded; start drawing
         window.setInterval(function() {
           update();
           draw();
