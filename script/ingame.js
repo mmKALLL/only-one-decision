@@ -50,7 +50,7 @@
   var images = {};
   var sounds = {};
 
-  startGame(); // Starts the game at the title screen.
+  initializeGame(); // Starts the game at the title screen.
 
 
 
@@ -65,15 +65,28 @@
         gameStatus.direction = 'left'
         keysHeld.ArrowRight = false
       }
+
+      if (gameStatus.direction === 'left' && gameStatus.distance < -300 && gameStatus.carActive === undefined) {
+        getHitByCar()
+      }
+
+      if (gameStatus.carActive === true) {
+        gameStatus.carSize += 15
+        images.car.width = gameStatus.carSize * 1.5
+        images.car.height = gameStatus.carSize
+        if (gameStatus.carSize > canvas.height) {
+          gameStatus.carActive = false
+        }
+      }
     }
   }
 
   function handleKeys() {
-    if (keysHeld['ArrowRight'] === true) {
+    if (keysHeld['ArrowRight'] === true && gameStatus.distance < images[41].width - canvas.width) {
       gameStatus.distance += MOVE_SPEED
     }
 
-    if (keysHeld['ArrowLeft'] === true) {
+    if (keysHeld['ArrowLeft'] === true && gameStatus.distance > -1200) {
       gameStatus.distance -= MOVE_SPEED
     }
 
@@ -82,58 +95,59 @@
     }
   }
 
+  function getHitByCar() {
+    gameStatus.carActive = true
+    gameStatus.carSize = 0
+    sounds['car-crash'].play()
+  }
+
 
 
   // DRAWING //
 
   function draw() {
     if (gameStatus.state === "ingame") {
-      drawIngame();
+      drawIngame()
     } else if (gameStatus.state === "mainmenu") {
-      drawMainMenu();
+      drawMainMenu()
     } else if (gameStatus.state === "gameover") {
-      drawGameOver();
+      drawGameOver()
     }
   }
 
   function drawMainMenu() {
-    drawBackground();
-    drawTitle();
+    drawBackground()
+    drawTitle()
   }
 
   function drawGameOver() {
     if (ctx.globalAlpha == 1) {
       ctx.save();
-      ctx.globalAlpha = 0.01;
+      ctx.globalAlpha = 0.01
     }
     if (ctx.globalAlpha < 0.98) {
-      ctx.globalAlpha += 0.01;
+      ctx.globalAlpha += 0.01
     }
-    ctx.beginPath();
-    ctx.rect(0, 0, 2000, 2000);
-    ctx.fillStyle = "#FF0C0C";
-    ctx.fill();
-    ctx.closePath();
-  }
-
-  function drawTitle() {
-    ctx.drawImage(images.titleimage, canvas.width / 2 - images.titleimage.width / 2, 100);
-    ctx.drawImage(images.playbutton, canvas.width / 2 - images.playbutton.width / 2, 500);
+    ctx.beginPath()
+    ctx.rect(0, 0, 2000, 2000)
+    ctx.fillStyle = "#FF0C0C"
+    ctx.fill()
+    ctx.closePath()
   }
 
   function drawBackground() {
     // background
-    ctx.beginPath();
-    ctx.rect(0, 0, 2000, 2000);
-    ctx.fillStyle = "#000000";
-    ctx.fill();
-    ctx.closePath();
+    ctx.beginPath()
+    ctx.rect(0, 0, 2000, 2000)
+    ctx.fillStyle = "#000000"
+    ctx.fill()
+    ctx.closePath()
 
-    // drawRotated(images.space_big, 325, 325, gameStatus.gameFrame * BG_SPIN_SPEED, -675, -675);
+
     if (gameStatus.direction === 'right') {
-      ctx.drawImage(images[41], 0 - gameStatus.distance, 200);
+      ctx.drawImage(images['41'], 0 - gameStatus.distance, 200)
     } else {
-      ctx.drawImage(images[42], 0 - gameStatus.distance, 200);
+      ctx.drawImage(images['42'], 0 - gameStatus.distance, 200)
     }
   }
 
@@ -142,23 +156,22 @@
     if (!dx || !dy) {
       dx = 0; dy = 0;
     }
-    ctx.translate(x, y);
-    ctx.rotate(-(degrees)/360 * 2 * Math.PI);
-    ctx.drawImage(img, dx, dy);
-    ctx.rotate(degrees/360 * 2 * Math.PI);
-    ctx.translate(-x, -y);
+    ctx.translate(x, y)
+    ctx.rotate(-(degrees)/360 * 2 * Math.PI)
+    ctx.drawImage(img, dx, dy)
+    ctx.rotate(degrees/360 * 2 * Math.PI)
+    ctx.translate(-x, -y)
   }
 
   function drawIngame() {
 
     // background
-    drawBackground();
+    drawBackground()
 
-    // foreground (particle effects, etc)
-    // drawParticles();
+    if (gameStatus.carActive === true) {
+      ctx.drawImage(images['car'], canvas.width / 2, 200)
+    }
   }
-
-
 
 
   // HELPER FUNCTIONS //
@@ -180,11 +193,11 @@
   // Returns true if adding to sounds object was a success, false otherwise.
   function loadSound(filename) {
     if (!sounds[filename.slice(0, -4)]) {
-      var snd = new Audio(SOUND_PATH + filename);
-      snd.ready = false;
-      snd.addEventListener("canplaythrough", function () { snd.ready = true; });
-      snd.volume = gameStatus.sfxVolume;
-      sounds[filename.slice(0, -4)] = snd;
+      var sound = new Audio(SOUND_PATH + filename);
+      sound.ready = false;
+      sound.addEventListener("canplaythrough", function () { sound.ready = true; });
+      sound.volume = gameStatus.sfxVolume;
+      sounds[filename.slice(0, -4)] = sound;
       return true;
     } else {
       return false;
@@ -209,14 +222,37 @@
 
   // GAME START HANDLER //
 
-  function startGame() {
+  function initializeGame() {
     // First some preparations:
+    loadAssets()
 
+    // Check that the assets are ready and launch the game
+    var intervalID = window.setInterval(function () {
+      const assetsLoaded = checkAssets()
+      if (assetsLoaded === true) {
+        resetStatus()
+        gameStatus.ready = true
+
+        window.setInterval(function() {
+          update()
+          draw()
+        }, 1000/FPS)
+        window.clearInterval(intervalID)
+      }
+    }, 200)
+  }
+
+  function loadAssets() {
     // Load assets
     loadImage("41.jpg");
     loadImage("42.jpg");
+    loadImage("car.jpg");
 
-    loadSound("lasershot6.wav");
+    loadSound("crash1.wav");
+    sounds.crash1.addEventListener("ended", function () {
+      sounds.burned.play();
+    });
+    loadSound("burned.wav");
 
     loadSound("TRACK1.mp3");
     sounds.TRACK1.volume = gameStatus.musicVolume;
@@ -225,39 +261,21 @@
       this.play();
     });
 
-    function checkAssets() {
-      if (gameStatus.ready) {
-        var key;
-        for (key in images) {
-          if (!images[key].ready) {
-            return 0;
-          }
-        }
-        for (key in sounds) {
-          if (!sounds[key].ready) {
-            return 0;
-          }
-        }
+  }
 
-        // Assets loaded; start drawing
-        window.setInterval(function() {
-          update();
-          draw();
-        }, 1000/FPS);
-        window.clearInterval(intervalID);
+  function checkAssets() {
+    var key;
+    for (key in images) {
+      if (!images[key].ready) {
+        return false
       }
     }
-
-    // Set up the game logic
-    resetStatus();
-    gameStatus.ready = true;
-
-    // Check that the assets are ready and launch the game
-    var intervalID = window.setInterval(function () {
-      checkAssets();
-    }, 200);
-
-
+    for (key in sounds) {
+      if (!sounds[key].ready) {
+        return false
+      }
+    }
+    return true
   }
 
   function resetStatus() {
@@ -268,7 +286,7 @@
       gameFrame: 0,
       sfxVolume: 0.4,
       musicVolume: 0.5,
-      distance: 0,
+      distance: -200,
       loops: 0,
       direction: 'right',
     }
