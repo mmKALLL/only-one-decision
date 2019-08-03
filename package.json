@@ -1,0 +1,19 @@
+{
+  "name": "only-one-ending",
+  "version": "1.0",
+  "private": true,
+
+  "eslintConfig": {
+
+    "root": true,
+
+    "env": {
+      "browser": true
+    },
+
+    "rules": {
+      "quotes": ["warn", "single"],
+      "semi": "none"
+    }
+  }
+}
