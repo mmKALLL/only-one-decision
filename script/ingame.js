@@ -168,8 +168,9 @@
     // background
     drawBackground()
 
+    // drawCar
     if (gameStatus.carActive === true) {
-      ctx.drawImage(images['car'], canvas.width / 2, 200, gameStatus.carSize * 1.5, gameStatus.carSize)
+      ctx.drawImage(images['car'], canvas.width / 2 - gameStatus.carSize * 0.4, 200, gameStatus.carSize * 1.5, gameStatus.carSize)
     }
   }
 
