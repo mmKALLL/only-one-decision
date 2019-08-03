@@ -66,12 +66,12 @@
         keysHeld.ArrowRight = false
       }
 
-      if (gameStatus.direction === 'left' && gameStatus.distance < -300 && gameStatus.carActive === undefined) {
+      if (gameStatus.direction === 'left' && gameStatus.distance < 100 && gameStatus.carActive === undefined) {
         getHitByCar()
       }
 
       if (gameStatus.carActive === true) {
-        gameStatus.carSize += 15
+        gameStatus.carSize += 11
         images.car.width = gameStatus.carSize * 1.5
         images.car.height = gameStatus.carSize
         if (gameStatus.carSize > canvas.height) {
@@ -98,7 +98,7 @@
   function getHitByCar() {
     gameStatus.carActive = true
     gameStatus.carSize = 0
-    sounds['car-crash'].play()
+    sounds['crash1'].play()
   }
 
 
@@ -169,7 +169,7 @@
     drawBackground()
 
     if (gameStatus.carActive === true) {
-      ctx.drawImage(images['car'], canvas.width / 2, 200)
+      ctx.drawImage(images['car'], canvas.width / 2, 200, gameStatus.carSize * 1.5, gameStatus.carSize)
     }
   }
 
@@ -246,7 +246,7 @@
     // Load assets
     loadImage("41.jpg");
     loadImage("42.jpg");
-    loadImage("car.jpg");
+    loadImage("car.png");
 
     loadSound("crash1.wav");
     sounds.crash1.addEventListener("ended", function () {
