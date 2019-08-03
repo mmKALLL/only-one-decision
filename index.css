@@ -52,3 +52,35 @@ progress {
 }
 
 
+.button {
+  background-color: Transparent;
+  color: white;
+  border: 1px white solid;
+  outline: none;
+  overflow: visible; /* TODO: set to hidden in final version */
+  margin: 9px 7px 9px 6.5px; /* URDL; exactly 17px grid spacing on Chrome. */
+  width: 160px;
+  height: 40px;
+  max-width: 60%;
+  max-height: auto;
+  /*transform: scale(1);*/
+  transition: color 10ms;
+  font-size: 0.9em
+}
+.button:hover {
+  color: black;
+  background-color: white;
+  border: 1px white solid;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+
+
+#new-game-button {
+  display: block;
+  margin: auto;
+  margin-top: 10vh;
+}
