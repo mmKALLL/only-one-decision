@@ -72,7 +72,7 @@
       handleKeys()
 
       if (gameStatus.distance < -800) {
-        document.getElementById('gameDiv').innerHTML = 'Thank you for playing.<br><br>By Chika, Esa, and Novi'
+        document.getElementById('gameDiv').innerHTML = 'Thank you for playing.<br><br>By Chika, Esa, and Jouni'
         gameStatus.state = 'arstarstrs'
         if (musics.TRACK6.playing === false) {
           playMusic(musics.TRACK6)
@@ -83,12 +83,18 @@
         turnAround()
       }
 
-      if (gameStatus.distance >= 4560 && gameStatus.direction === 'right' && (musics.TRACK1.playing === true || musics.TRACK10.playing === true)) {
+      if (gameStatus.distance >= 4560 && gameStatus.direction === 'right' && musics.TRACK1.playing === true) {
         fadeMusic(musics.TRACK1)
-        fadeMusic(musics.TRACK10)
         playMusic(musics.TRACK4)
         MOVE_SPEED = 0.75
       }
+
+      if (gameStatus.distance >= 4560 && gameStatus.direction === 'right' && musics.TRACK10.playing === true) {
+        fadeMusic(musics.TRACK10)
+        playMusic(musics.TRACK11)
+        MOVE_SPEED = 0.65
+      }
+
 
       if (gameStatus.distance >= 6300 && gameStatus.direction === 'right') {
         MOVE_SPEED = 0.6
@@ -174,16 +180,18 @@
   }
 
   function turnAround() {
-    MOVE_SPEED = DEFAULT_MOVE_SPEED
     gameStatus.direction = 'left'
     gameStatus.distance = 6837
+    MOVE_SPEED = DEFAULT_MOVE_SPEED
     keysHeld.ArrowRight = false
     keysHeld.pointer = false
     fadeMusic(musics.TRACK1)
     fadeMusic(musics.TRACK4)
     fadeMusic(musics.TRACK10)
-
-    window.setTimeout(() => playMusic(musics.TRACK8), 4500)
+    if (musics.TRACK11.playing === true) {
+      fadeMusic(musics.TRACK11)
+      window.setTimeout(() => playMusic(musics.TRACK9), 7500)
+    }
 
     playSound('vanquish')
     flashScreen('#FFFFFF', 0.03)
@@ -407,7 +415,9 @@
     loadMusic('TRACK4.mp3')
     loadMusic('TRACK6.mp3')
     loadMusic('TRACK8.mp3')
+    loadMusic('TRACK9.mp3')
     loadMusic('TRACK10.mp3')
+    loadMusic('TRACK11.mp3')
 
     musics.TRACK6.loop = false
   }
