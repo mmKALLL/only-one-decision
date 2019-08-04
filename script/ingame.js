@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 
 /* *****************************************************************************
- * Invasion - A game about defending your planet and escaping solitude.
+ * Only Two Endings - A simple game about finding a friend.
  * Author: Esa Koskinen (mmKALLL)
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -10,7 +10,7 @@
  *
  * Copyright (c) 2017 Esa Koskinen
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -24,73 +24,144 @@
 (function () {
 
   /* CONSTANTS AND SETUP */
-  var CONSOLE_DEBUG = true;
-  var IMAGE_PATH = "img/";
-  var SOUND_PATH = "sound/";
+  var CONSOLE_DEBUG = true
+  var IMAGE_PATH = 'img/'
+  var SOUND_PATH = 'sound/'
+  var MUSIC_PATH = 'music/'
+  const SEMAPHORE_X_MONO = 2730
+  const SEMAPHORE_X_COLOR = 2435
 
-
-  const FPS = 60;
-  var MOVE_SPEED = 0.8
-  const BG_SPIN_SPEED = 0.03;
+  const FPS = 60
+  const DEFAULT_MOVE_SPEED = 0.90
+  var MOVE_SPEED = DEFAULT_MOVE_SPEED
 
   const keysHeld = {}
-  document.body.onkeydown = (event) => { keysHeld[event.key] = true; enableMusic() }
+  document.body.onkeydown = (event) => { keysHeld[event.key] = true }
+  document.body.onpointerdown = (event) => { event.preventDefault(); keysHeld['pointer'] = true }
   document.body.onkeyup = (event) => keysHeld[event.key] = false
+  document.body.onpointerup = (event) => { event.preventDefault(); keysHeld['pointer'] = false }
+  document.body.onpointerout = (event) => { event.preventDefault(); keysHeld['pointer'] = false }
+
+  document.body.addEventListener('keydown', () => playMusic(musics.TRACK1), { once: true })
+  document.body.addEventListener('pointerdown', () => playMusic(musics.TRACK1), { once: true })
 
   var gameStatus = {
     ready: false,
     get isReady() { return this.ready },
     gameFrame: 0,
-    sfxVolume: 0.4,
+    sfxVolume: 0.5,
     musicVolume: 0.5,
-  };
+  }
 
-  var canvas = document.getElementById("gameCanvas");
-  var ctx = canvas.getContext("2d");
-  var images = {};
-  var sounds = {};
+  var canvas = document.getElementById('gameCanvas')
+  var ctx = canvas.getContext('2d')
+  var images = {}
+  var sounds = {}
+  var musics = {}
 
-  initializeGame(); // Starts the game at the title screen.
+  initializeGame() // Starts the game at the title screen.
 
 
 
   // GAME LOOP //
 
   function update() {
-    gameStatus.gameFrame += 1;
-    if (gameStatus.state == "ingame") {
-      handleKeys();
+    console.log(gameStatus.distance)
+    gameStatus.gameFrame += 1
+    if (gameStatus.state == 'ingame') {
+      handleKeys()
 
-      if (gameStatus.distance >= images[41].width - canvas.width) {
-        gameStatus.direction = 'left'
-        keysHeld.ArrowRight = false
+      if (gameStatus.distance < -800) {
+        document.getElementById('gameDiv').innerHTML = 'Thank you for playing.<br><br>By Chika, Esa, and Novi'
+        gameStatus.state = 'arstarstrs'
+        if (musics.TRACK6.playing === false) {
+          playMusic(musics.TRACK6)
+        }
       }
 
-      if (gameStatus.direction === 'left' && gameStatus.distance < 100 && gameStatus.carActive === undefined) {
+      if (gameStatus.distance >= 7160 && gameStatus.direction === 'right') {
+        turnAround()
+      }
+
+      if (gameStatus.distance >= 4560 && gameStatus.direction === 'right' && (musics.TRACK1.playing === true || musics.TRACK10.playing === true)) {
+        fadeMusic(musics.TRACK1)
+        fadeMusic(musics.TRACK10)
+        playMusic(musics.TRACK4)
+        MOVE_SPEED = 0.75
+      }
+
+      if (gameStatus.distance >= 6300 && gameStatus.direction === 'right') {
+        MOVE_SPEED = 0.6
+      }
+
+      if (gameStatus.distance >= 6800 && gameStatus.direction === 'right') {
+        MOVE_SPEED = 0.49
+      }
+
+      // victory
+      if (gameStatus.distance <= 180 && gameStatus.direction === 'left' && !musics.TRACK6.playing) {
+        fadeMusic(musics.TRACK8)
+        fadeMusic(musics.TRACK10)
+        playMusic(musics.TRACK6)
+      }
+
+      // wait for traffic light
+      if (gameStatus.semaphoreStartTime === undefined && gameStatus.direction === 'left' && gameStatus.distance < 2800 && !gameStatus.carActive) {
+        gameStatus.semaphoreStartTime = Date.now()
+      }
+
+      if (Date.now() - gameStatus.semaphoreStartTime > 13000) {
+        gameStatus.semaphoreGreen = true
+      }
+
+      // bad ending
+      if (!gameStatus.semaphoreGreen === true && gameStatus.direction === 'left' && gameStatus.distance < 2250 && gameStatus.carActive === undefined) {
         getHitByCar()
       }
 
       if (gameStatus.carActive === true) {
-        gameStatus.carSize += 11
-        images.car.width = gameStatus.carSize * 1.5
-        images.car.height = gameStatus.carSize
-        if (gameStatus.carSize > canvas.height) {
+        gameStatus.carSize += 18
+        images.car.width = gameStatus.carSize * 1.6
+        images.car.height = gameStatus.carSize * 0.9
+
+        // Car finished
+        if (gameStatus.carSize > 500) {
           gameStatus.carActive = false
+          gameStatus.direction = 'right'
+          gameStatus.semaphoreStartTime === undefined
+          gameStatus.distance = 1080
+          gameStatus.loops += 1
+
+          fadeMusic(musics.TRACK8)
+          playMusic(musics.TRACK10)
+          playSound('vanquish')
+          flashScreen('#FF2020', 0.01)
+
+          setTimeout(() => {
+            gameStatus.state = 'ingame'
+            ctx.restore()
+            canvas.width = 200
+            MOVE_SPEED = 0.75
+          }, 1466) // 90 frames
         }
       }
     }
   }
 
   function handleKeys() {
-    if (keysHeld['ArrowRight'] === true && gameStatus.distance < images[41].width - canvas.width) {
+    if (keysHeld['ArrowRight'] === true && gameStatus.direction === 'right') {
       gameStatus.distance += MOVE_SPEED
     }
 
-    if (keysHeld['ArrowLeft'] === true && gameStatus.distance > -1200) {
+    if (keysHeld['ArrowLeft'] === true && gameStatus.direction === 'left' && gameStatus.distance > 180) {
       gameStatus.distance -= MOVE_SPEED
     }
 
-    if (keysHeld[' '] === true) {
+    if (keysHeld['pointer'] === true) {
+      gameStatus.distance += gameStatus.direction === 'right' ? MOVE_SPEED : 0 - MOVE_SPEED
+    }
+
+    if (keysHeld['u'] === true) {
       MOVE_SPEED = 10
     }
   }
@@ -98,7 +169,26 @@
   function getHitByCar() {
     gameStatus.carActive = true
     gameStatus.carSize = 0
+    gameStatus.loops += 1
     sounds['crash1'].play()
+  }
+
+  function turnAround() {
+    MOVE_SPEED = DEFAULT_MOVE_SPEED
+    gameStatus.direction = 'left'
+    gameStatus.distance = 6837
+    keysHeld.ArrowRight = false
+    keysHeld.pointer = false
+    fadeMusic(musics.TRACK1)
+    fadeMusic(musics.TRACK4)
+    fadeMusic(musics.TRACK10)
+
+    window.setTimeout(() => playMusic(musics.TRACK8), 4500)
+
+    playSound('vanquish')
+    flashScreen('#FFFFFF', 0.03)
+
+    canvas.width = 800
   }
 
 
@@ -106,12 +196,12 @@
   // DRAWING //
 
   function draw() {
-    if (gameStatus.state === "ingame") {
+    if (gameStatus.state === 'ingame') {
       drawIngame()
-    } else if (gameStatus.state === "mainmenu") {
+    } else if (gameStatus.state === 'mainmenu') {
       drawMainMenu()
-    } else if (gameStatus.state === "gameover") {
-      drawGameOver()
+    } else if (gameStatus.state === 'screen-flash') {
+      flashScreen(gameStatus.flashColor, gameStatus.flashDelta)
     }
   }
 
@@ -120,17 +210,26 @@
     drawTitle()
   }
 
-  function drawGameOver() {
+  // MAXIMUM DELTA SHOULD BE 0.04 -> 25 frames
+  function flashScreen(colorString, delta) {
+    console.log(gameStatus.state, ctx.globalAlpha)
     if (ctx.globalAlpha == 1) {
-      ctx.save();
+      ctx.save()
       ctx.globalAlpha = 0.01
+      gameStatus.state = 'screen-flash'
+      gameStatus.flashColor = colorString
+      gameStatus.flashDelta = delta
     }
-    if (ctx.globalAlpha < 0.98) {
-      ctx.globalAlpha += 0.01
+    if (ctx.globalAlpha < 0.95) {
+      ctx.globalAlpha += delta
+    }
+    if (ctx.globalAlpha > 0.95) {
+      gameStatus.state = 'ingame'
+      ctx.restore()
     }
     ctx.beginPath()
-    ctx.rect(0, 0, 2000, 2000)
-    ctx.fillStyle = "#FF0C0C"
+    ctx.rect(0, 0, 1500, 1500)
+    ctx.fillStyle = colorString
     ctx.fill()
     ctx.closePath()
   }
@@ -139,22 +238,29 @@
     // background
     ctx.beginPath()
     ctx.rect(0, 0, 2000, 2000)
-    ctx.fillStyle = "#000000"
+    ctx.fillStyle = '#000000'
     ctx.fill()
     ctx.closePath()
 
 
     if (gameStatus.direction === 'right') {
-      ctx.drawImage(images['41'], 0 - gameStatus.distance, 200)
+      ctx.drawImage(images['BG_mono'], 0 - gameStatus.distance, 50)
+      ctx.drawImage(images['semaphore_red_mono2'], SEMAPHORE_X_MONO - gameStatus.distance, 80)
     } else {
-      ctx.drawImage(images['42'], 0 - gameStatus.distance, 200)
+      ctx.drawImage(images['BG_color'], 0 - gameStatus.distance, 50)
+      if (gameStatus.semaphoreGreen === true) {
+        ctx.drawImage(images['semaphore_blue_color'], SEMAPHORE_X_COLOR - gameStatus.distance, 80)
+      } else {
+        ctx.drawImage(images['semaphore_red_color'], SEMAPHORE_X_COLOR - gameStatus.distance, 80)
+      }
     }
   }
 
   // Helper function for drawing things rotated by some amount of degrees
   function drawRotated(img, x, y, degrees, dx, dy) {
     if (!dx || !dy) {
-      dx = 0; dy = 0;
+      dx = 0
+      dy = 0
     }
     ctx.translate(x, y)
     ctx.rotate(-(degrees)/360 * 2 * Math.PI)
@@ -165,12 +271,12 @@
 
   function drawIngame() {
 
-    // background
+    // background & semaphore
     drawBackground()
 
     // drawCar
     if (gameStatus.carActive === true) {
-      ctx.drawImage(images['car'], canvas.width / 2 - gameStatus.carSize * 0.4, 200, gameStatus.carSize * 1.5, gameStatus.carSize)
+      ctx.drawImage(images['car'], canvas.width / 2 - gameStatus.carSize * 0.6, 100, gameStatus.carSize * 1.5, gameStatus.carSize)
     }
   }
 
@@ -180,45 +286,82 @@
   // Returns true if adding to images object was a success, false otherwise.
   function loadImage(filename) {
     if (!images[filename.slice(0, -4)]) {
-      var img = new Image();
-      img.ready = false;
-      img.onload = function () { img.ready = true; };
-      img.src = IMAGE_PATH + filename;
-      images[filename.slice(0, -4)] = img;
-      return true;
+      var img = new Image()
+      img.ready = false
+      img.onload = function () { img.ready = true }
+      img.src = IMAGE_PATH + filename
+      images[filename.slice(0, -4)] = img
+      return true
     } else {
-      return false;
+      return false
     }
   }
 
   // Returns true if adding to sounds object was a success, false otherwise.
   function loadSound(filename) {
     if (!sounds[filename.slice(0, -4)]) {
-      var sound = new Audio(SOUND_PATH + filename);
-      sound.ready = false;
-      sound.addEventListener("canplaythrough", function () { sound.ready = true; });
-      sound.volume = gameStatus.sfxVolume;
-      sounds[filename.slice(0, -4)] = sound;
-      return true;
+      var sound = new Audio(SOUND_PATH + filename)
+      sound.ready = false
+      sound.addEventListener('canplaythrough', function () { sound.ready = true })
+      sound.volume = gameStatus.sfxVolume
+      sounds[filename.slice(0, -4)] = sound
+      return true
     } else {
-      return false;
+      return false
+    }
+  }
+
+  // Returns true if adding to musics object was a success, false otherwise.
+  function loadMusic(filename) {
+    if (!musics[filename.slice(0, -4)]) {
+      var track = new Audio(MUSIC_PATH + filename)
+      track.ready = false
+      track.playing = false
+      track.addEventListener('canplaythrough', function () { track.ready = true })
+      track.loop = true
+      track.volume = gameStatus.musicVolume
+      musics[filename.slice(0, -4)] = track
+      return true
+    } else {
+      return false
     }
   }
 
   function changeSfxVolume(newVolume) {
-    gameStatus.sfxVolume = newVolume;
+    gameStatus.sfxVolume = newVolume
     for (key in sounds) {
-      sounds[key].volume = newVolume;
+      sounds[key].volume = newVolume
     }
   }
 
-  function enableMusic() {
-    if (!sounds.TRACK1.playing) {
-      sounds.TRACK1.playing = true
+  function fadeMusic(track) {
+    if (track.playing === true) {
+      const intervalID = window.setInterval(() => {
+        if (track.volume > 0) {
+          track.volume = Math.max(0, track.volume - 0.004)
+        } else {
+          track.playing = false
+          track.pause()
+          track.currentTime = 0
+          track.volume = gameStatus.musicVolume
+          window.clearInterval(intervalID)
+        }
+      }, 50)
+    }
+  }
+
+  function playMusic(track) {
+    if (!track.playing) {
+      console.log('play ' + track)
+      track.playing = true
       setTimeout(() => {
-        sounds.TRACK1.play()
+        track.play()
       }, 1200)
     }
+  }
+
+  function playSound(sound) {
+    sounds[sound].play()
   }
 
   // GAME START HANDLER //
@@ -245,27 +388,32 @@
 
   function loadAssets() {
     // Load assets
-    loadImage("41.jpg");
-    loadImage("42.jpg");
-    loadImage("car.png");
+    loadImage('BG_mono.jpg')
+    loadImage('BG_color.jpg')
+    loadImage('semaphore_red_mono2.png')
+    loadImage('semaphore_red_color.png')
+    loadImage('semaphore_blue_mono.png')
+    loadImage('semaphore_blue_color.png')
+    loadImage('car.png')
 
-    loadSound("crash1.wav");
-    sounds.crash1.addEventListener("ended", function () {
-      sounds.burned.play();
-    });
-    loadSound("burned.wav");
+    loadSound('vanquish.wav')
+    loadSound('burned.wav')
+    loadSound('crash1.wav')
+    sounds.crash1.addEventListener('ended', () => {
+      sounds.burned.play()
+    })
 
-    loadSound("TRACK1.mp3");
-    sounds.TRACK1.volume = gameStatus.musicVolume;
-    sounds.TRACK1.addEventListener("ended", function () {
-      this.currentTime = 0;
-      this.play();
-    });
+    loadMusic('TRACK1.mp3')
+    loadMusic('TRACK4.mp3')
+    loadMusic('TRACK6.mp3')
+    loadMusic('TRACK8.mp3')
+    loadMusic('TRACK10.mp3')
 
+    musics.TRACK6.loop = false
   }
 
   function checkAssets() {
-    var key;
+    var key
     for (key in images) {
       if (!images[key].ready) {
         return false
@@ -273,6 +421,11 @@
     }
     for (key in sounds) {
       if (!sounds[key].ready) {
+        return false
+      }
+    }
+    for (key in musics) {
+      if (!musics[key].ready) {
         return false
       }
     }
@@ -285,11 +438,11 @@
       ready: false,
       get isReady() { return this.ready },
       gameFrame: 0,
-      sfxVolume: 0.4,
+      sfxVolume: 0.5,
       musicVolume: 0.5,
-      distance: -200,
-      loops: 0,
+      distance: 2430,
       direction: 'right',
+      loops: 0,
     }
 
     gameStatus.state = 'ingame'
