@@ -1,4 +1,4 @@
-# Only One Ending
+# Only One Decision
 
 A simple game about finding a friend.
 
