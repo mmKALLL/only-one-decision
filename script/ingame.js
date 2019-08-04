@@ -107,6 +107,7 @@
       // victory
       if (gameStatus.distance <= 180 && gameStatus.direction === 'left' && !musics.TRACK6.playing) {
         fadeMusic(musics.TRACK8)
+        fadeMusic(musics.TRACK9)
         fadeMusic(musics.TRACK10)
         playMusic(musics.TRACK6)
       }
@@ -139,6 +140,7 @@
           gameStatus.loops += 1
 
           fadeMusic(musics.TRACK8)
+          fadeMusic(musics.TRACK9)
           playMusic(musics.TRACK10)
           playSound('vanquish')
           flashScreen('#FF2020', 0.01)
@@ -191,6 +193,8 @@
     if (musics.TRACK11.playing === true) {
       fadeMusic(musics.TRACK11)
       window.setTimeout(() => playMusic(musics.TRACK9), 7500)
+    } else {
+      window.setTimeout(() => playMusic(musics.TRACK8), 6000)
     }
 
     playSound('vanquish')
