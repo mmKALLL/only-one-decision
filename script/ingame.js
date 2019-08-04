@@ -1,7 +1,7 @@
 'use strict';
 
 /* *****************************************************************************
- * Only Two Endings - A simple game about finding a friend.
+ * Only One Decision - A simple game about finding a friend.
  * Author: Esa Koskinen (mmKALLL)
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
