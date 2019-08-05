@@ -32,7 +32,7 @@
   const SEMAPHORE_X_COLOR = 2435
 
   const FPS = 60
-  const DEFAULT_MOVE_SPEED = 0.90
+  const DEFAULT_MOVE_SPEED = 0.96
   var MOVE_SPEED = DEFAULT_MOVE_SPEED
 
   const keysHeld = {}
@@ -40,7 +40,7 @@
   document.body.onpointerdown = (event) => { event.preventDefault(); keysHeld['pointer'] = true }
   document.body.onkeyup = (event) => keysHeld[event.key] = false
   document.body.onpointerup = (event) => { event.preventDefault(); keysHeld['pointer'] = false }
-  document.body.onpointerout = (event) => { event.preventDefault(); keysHeld['pointer'] = false }
+  // document.body.onpointerout = (event) => { event.preventDefault(); keysHeld['pointer'] = false }
 
   document.body.addEventListener('keydown', () => playMusic(musics.TRACK1), { once: true })
   document.body.addEventListener('pointerdown', () => playMusic(musics.TRACK1), { once: true })
@@ -71,6 +71,7 @@
     if (gameStatus.state == 'ingame') {
       handleKeys()
 
+      // Hidden ending
       if (gameStatus.distance < -800) {
         document.getElementById('gameDiv').innerHTML = 'Thank you for playing.<br><br>By Chika, Esa, and Jouni'
         gameStatus.state = 'arstarstrs'
@@ -110,6 +111,9 @@
         fadeMusic(musics.TRACK9)
         fadeMusic(musics.TRACK10)
         playMusic(musics.TRACK6)
+
+        keysHeld[' '] = false
+        keysHeld['pointer'] = false
       }
 
       // wait for traffic light
@@ -117,7 +121,7 @@
         gameStatus.semaphoreStartTime = Date.now()
       }
 
-      if (Date.now() - gameStatus.semaphoreStartTime > 13000) {
+      if (Date.now() - gameStatus.semaphoreStartTime > 15000) {
         gameStatus.semaphoreGreen = true
       }
 
@@ -157,6 +161,10 @@
   }
 
   function handleKeys() {
+    if (keysHeld['u'] === true) {
+      MOVE_SPEED = 10 // for debug purposes
+    }
+
     if (keysHeld['ArrowRight'] === true && gameStatus.direction === 'right') {
       gameStatus.distance += MOVE_SPEED
     }
@@ -165,12 +173,8 @@
       gameStatus.distance -= MOVE_SPEED
     }
 
-    if (keysHeld['pointer'] === true) {
+    if (keysHeld['pointer'] === true || keysHeld[' '] === true) {
       gameStatus.distance += gameStatus.direction === 'right' ? MOVE_SPEED : 0 - MOVE_SPEED
-    }
-
-    if (keysHeld['u'] === true) {
-      MOVE_SPEED = 10
     }
   }
 
@@ -184,7 +188,7 @@
   function turnAround() {
     gameStatus.direction = 'left'
     gameStatus.distance = 6837
-    MOVE_SPEED = DEFAULT_MOVE_SPEED
+    MOVE_SPEED = DEFAULT_MOVE_SPEED + 0.07
     keysHeld.ArrowRight = false
     keysHeld.pointer = false
     fadeMusic(musics.TRACK1)
