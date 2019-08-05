@@ -36,13 +36,24 @@
   var MOVE_SPEED = DEFAULT_MOVE_SPEED
 
   const keysHeld = {}
-  document.body.onkeydown = (event) => { keysHeld[event.key] = true }
-  document.body.onpointerdown = (event) => { event.preventDefault(); keysHeld['pointer'] = true }
-  document.body.onkeyup = (event) => keysHeld[event.key] = false
-  document.body.onpointerup = (event) => { event.preventDefault(); keysHeld['pointer'] = false }
+  document.body.onkeydown = (event) => { canvas.focus(); keysHeld[event.key] = true }
+  document.body.onpointerdown = (event) => { keysHeld['pointer'] = true }
+  document.body.onkeyup = (event) => { keysHeld[event.key] = false }
+  document.body.onpointerup = (event) => { keysHeld['pointer'] = false }
+
+  // Fix for itch.io
+  window.onkeydown = (event) => { canvas.focus(); keysHeld[event.key] = true }
+  window.onpointerdown = (event) => { keysHeld['pointer'] = true }
+  window.onkeyup = (event) => { keysHeld[event.key] = false }
+  window.onpointerup = (event) => { keysHeld['pointer'] = false }
   // document.body.onpointerout = (event) => { event.preventDefault(); keysHeld['pointer'] = false }
 
   document.body.addEventListener('keydown', () => {
+    playMusic(musics.TRACK1)
+    musics.TRACK1.donotplay = true
+  }, { once: true })
+
+  window.addEventListener('keydown', () => {
     playMusic(musics.TRACK1)
     musics.TRACK1.donotplay = true
   }, { once: true })
@@ -133,7 +144,7 @@
       }
 
       // bad ending
-      if (!gameStatus.semaphoreGreen === true && gameStatus.direction === 'left' && gameStatus.distance < 2250 && gameStatus.carActive === undefined) {
+      if (!gameStatus.semaphoreGreen === true && gameStatus.direction === 'left' && gameStatus.distance < 2150 && gameStatus.carActive === undefined) {
         getHitByCar()
       }
 
