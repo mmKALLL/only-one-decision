@@ -42,8 +42,15 @@
   document.body.onpointerup = (event) => { event.preventDefault(); keysHeld['pointer'] = false }
   // document.body.onpointerout = (event) => { event.preventDefault(); keysHeld['pointer'] = false }
 
-  document.body.addEventListener('keydown', () => playMusic(musics.TRACK1), { once: true })
-  document.body.addEventListener('pointerdown', () => playMusic(musics.TRACK1), { once: true })
+  document.body.addEventListener('keydown', () => {
+    playMusic(musics.TRACK1)
+    musics.TRACK1.donotplay = true
+  }, { once: true })
+
+  document.body.addEventListener('pointerdown', () => {
+    playMusic(musics.TRACK1)
+    musics.TRACK1.donotplay = true
+  }, { once: true })
 
   var gameStatus = {
     ready: false,
@@ -367,7 +374,7 @@
   }
 
   function playMusic(track) {
-    if (!track.playing) {
+    if (!track.playing && track.donotplay !== true) {
       console.log('play ' + track)
       track.playing = true
       setTimeout(() => {
