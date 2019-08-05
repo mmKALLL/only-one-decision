@@ -8,7 +8,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2017 Esa Koskinen
+ * Copyright (c) 2019 Esa Koskinen
  *
  * THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -87,7 +87,7 @@
       if (gameStatus.distance >= 4560 && gameStatus.direction === 'right' && musics.TRACK1.playing === true) {
         fadeMusic(musics.TRACK1)
         playMusic(musics.TRACK4)
-        MOVE_SPEED = 0.75
+        MOVE_SPEED = 0.83
       }
 
       if (gameStatus.distance >= 4560 && gameStatus.direction === 'right' && musics.TRACK10.playing === true) {
