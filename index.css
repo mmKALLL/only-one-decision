@@ -16,6 +16,7 @@ progress {
 }
 
 #root {
+  user-select: none;
   display: block;
   position: relative;
   max-height: 100%;
